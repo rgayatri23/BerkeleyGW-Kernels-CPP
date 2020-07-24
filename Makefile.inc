@@ -213,7 +213,13 @@ else ifeq ($(COMP_CHOICE),pgi)
     CFLAGS += -acc #-Minfo=accel #-ta=tesla:managed
   endif
 
+
   ifeq ($(GPU),y)
+
+    ifeq ($(OPENMP_TARGET),y)
+      CFLAGS += -fast -mp=gpu:cc70
+    endif
+
     ifeq ($(OPENACC),y)
       tgtflags=tesla:fastmath
 

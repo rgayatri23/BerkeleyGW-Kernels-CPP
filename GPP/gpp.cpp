@@ -165,12 +165,8 @@ int main(int argc, char **argv) {
   const DataType e_lk = 10;
   const DataType dw = 1;
   const DataType to1 = 1e-6;
-  const DataType gamma = 0.5;
-  const DataType sexcut = 4.0;
-  const DataType limitone = 1.0 / (to1 * 4.0);
   const DataType limittwo = pow(0.5, 2);
   const DataType e_n1kq = 6.0;
-  const DataType occ = 1.0;
 
   // Using time point and system_clock
   time_point<system_clock> start, end, k_start, k_end;
@@ -178,17 +174,8 @@ int main(int argc, char **argv) {
   double elapsedKernelTimer;
 
   // OpenMP Printing of threads on Host and Device
-  int numThreads = 1, numTeams = 2;
 #if defined(_OPENMP)
-#pragma omp parallel shared(numThreads)
-  {
-    int tid = omp_get_thread_num();
-    if (tid == 0)
-      numThreads = omp_get_num_threads();
-  }
-  std::cout << "Number of OpenMP Threads = " << numThreads << endl;
-#endif
-
+  int numThreads = 1, numTeams = 2;
 #if defined(OPENMP_TARGET)
 #pragma omp target map(tofrom : numTeams, numThreads)
 #pragma omp teams shared(numTeams)
@@ -206,7 +193,17 @@ int main(int argc, char **argv) {
   }
   std::cout << "Number of OpenMP Teams = " << numTeams << std::endl;
   std::cout << "Number of OpenMP DEVICE Threads = " << numThreads << std::endl;
+#else
+#pragma omp parallel shared(numThreads)
+  {
+    int tid = omp_get_thread_num();
+    if (tid == 0)
+      numThreads = omp_get_num_threads();
+  }
+  std::cout << "Number of OpenMP Threads = " << numThreads << endl;
 #endif
+#endif
+
 
   // Printing out the params passed.
   std::cout << "Sizeof(CustomComplex<DataType> = "
