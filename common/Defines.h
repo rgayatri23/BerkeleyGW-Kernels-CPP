@@ -21,11 +21,11 @@ using DataType = double;
 using namespace std::chrono;
 
 // ArrayMD definitions
-#define ARRAY3D Array3D<CustomComplex<DataType>>
-#define ARRAY2D Array2D<CustomComplex<DataType>>
-#define ARRAY1D Array1D<CustomComplex<DataType>>
-#define ARRAY1D_int Array1D<int>
-#define ARRAY1D_DataType Array1D<DataType>
+#define ARRAY3D ArrayMD<CustomComplex<DataType>, 3, Device::cpu>
+#define ARRAY2D ArrayMD<CustomComplex<DataType>, 2, Device::cpu>
+#define ARRAY1D ArrayMD<CustomComplex<DataType>, 1, Device::cpu>
+#define ARRAY1D_int ArrayMD<int, 1, Device::cpu>
+#define ARRAY1D_DataType ArrayMD<DataType, 1, Device::cpu>
 
 // Function Definitions
 
