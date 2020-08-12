@@ -15,7 +15,8 @@ SET(GPPTarget gpp)
 FILE(GLOB gpp-sources
     ${CMAKE_SOURCE_DIR}/GPP/gpp.cpp
     ${CMAKE_SOURCE_DIR}/ComplexClass/CustomComplex.h
-    ${CMAKE_SOURCE_DIR}/arrayMD/*.h
+    ${CMAKE_SOURCE_DIR}/arrayMD/arrayMD.h
+    ${CMAKE_SOURCE_DIR}/common/Defines.h
   )
 
 MESSAGE(STATUS "CMAKE_SOURCE_DIR = " ${CMAKE_SOURCE_DIR})
@@ -37,9 +38,12 @@ if(${OPENMP_TARGET})
   find_package(CUDA REQUIRED)
   find_package(OpenMP REQUIRED)
   target_compile_definitions(${GPPTarget} PRIVATE OPENMP_TARGET)
+  target_link_libraries(${GPPTarget} PUBLIC OpenMP::OpenMP_CXX)
 
   if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
   target_compile_options(${GPPTarget} PRIVATE -fopenmp-targets=nvptx64-nvidia-cuda --cuda-path=${CUDA_TOOLKIT_ROOT_DIR} -I${CUDA_TOOLKIT_ROOT_DIR}/include -ffp-contract=fast)
+  target_compile_options(${GPPTarget} PRIVATE -fopenmp-cuda-mode)
+  target_compile_options(${GPPTarget} PRIVATE -ffast-math -fstrict-aliasing -Wall -Wno-unused-variable -Wall)
   target_link_options(${GPPTarget} PRIVATE -fopenmp-targets=nvptx64-nvidia-cuda -fopenmp=libiomp5)
   endif()
 
@@ -72,6 +76,8 @@ if(${OPENMP_TARGET})
 
   if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
     target_compile_options(${FFTarget} PRIVATE -fopenmp-targets=nvptx64-nvidia-cuda --cuda-path=${CUDA_TOOLKIT_ROOT_DIR} -I${CUDA_TOOLKIT_ROOT_DIR}/include -ffp-contract=fast)
+    target_compile_options(${FFTarget} PRIVATE -fopenmp-cuda-mode)
+    target_compile_options(${FFTarget} PRIVATE -ffast-math -fstrict-aliasing -Wall -Wno-unused-variable -Wall)
     target_link_options(${FFTarget} PRIVATE -fopenmp-targets=nvptx64-nvidia-cuda -fopenmp=libiomp5)
   endif()
 

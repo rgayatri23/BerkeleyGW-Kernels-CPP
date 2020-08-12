@@ -177,8 +177,8 @@ int main(int argc, char **argv) {
 #if defined(_OPENMP)
   int numThreads = 1, numTeams = 2;
 #if defined(OPENMP_TARGET)
-#pragma omp target map(tofrom : numTeams, numThreads)
-#pragma omp teams shared(numTeams)
+#pragma omp target teams map(tofrom : numTeams, numThreads) \
+  shared(numTeams)
   {
     int tid = omp_get_team_num();
     if (tid == 0) {
@@ -351,6 +351,10 @@ void noflagOCC_solver(size_t number_bands, size_t ngpown, size_t ncouls,
     present(inv_igp_index, indinv, aqsmtemp, aqsntemp, wtilde_array, wx_array, I_eps_array, vcoul) \
     reduction(+:ach_re0, ach_re1, ach_re2, ach_im0, ach_im1, ach_im2)\
     num_gangs(number_bands*ncouls)
+  for (int n1 = 0; n1 < number_bands; ++n1) {
+    for (int my_igp = 0; my_igp < ngpown; ++my_igp) {
+      for (int ig = 0; ig < ncouls; ++ig) {
+#else
   for (int n1 = 0; n1 < number_bands; ++n1) {
     for (int my_igp = 0; my_igp < ngpown; ++my_igp) {
       for (int ig = 0; ig < ncouls; ++ig) {

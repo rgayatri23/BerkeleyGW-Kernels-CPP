@@ -525,8 +525,8 @@ int main(int argc, char **argv) {
 #endif
 
 #if defined(OPENMP_TARGET)
-#pragma omp target map(tofrom : numTeams, numThreads)
-#pragma omp teams shared(numTeams) private(tid)
+#pragma omp target teams map(tofrom : numTeams, numThreads) \
+  shared(numTeams) private(tid)
   {
     tid = omp_get_team_num();
     if (tid == 0) {

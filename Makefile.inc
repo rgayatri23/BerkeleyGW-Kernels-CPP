@@ -164,6 +164,7 @@ else ifeq ($(COMP_CHOICE),clang)
   ifeq ($(GPU),y)
     # clang-ykt option: -fopenmp-nonaliased-maps
     CFLAGS += -fopenmp-targets=nvptx64-nvidia-cuda --cuda-path=${CUDA_PATH} -ffp-contract=fast
+    CFLAGS += -fopenmp-cuda-mode
 
     # Arch specific flags: llvm/tools/clang/test/Driver/openmp-offload-gpu.c
     ifeq ($(LMOD_SYSTEM_NAME),summitdev)
