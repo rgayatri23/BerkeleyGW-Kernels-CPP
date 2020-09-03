@@ -65,13 +65,12 @@ inline double elapsedTime(timeval start_time, timeval end_time) {
           1e-6 * (end_time.tv_usec - start_time.tv_usec));
 }
 
-inline void correctness(CustomComplex<double> &achsDtemp,
-                        CustomComplex<double> &asxDtemp,
-                        CustomComplex<double> &achDtemp_cor) {
+inline void correctness(ComplexType &achsDtemp, ComplexType &asxDtemp,
+                        ComplexType &achDtemp_cor) {
   double re_diff = 0.0, im_diff = 0.0;
   // achsDtemp correctness
-  re_diff = achsDtemp.get_real() - -2776374339.750000;
-  im_diff = achsDtemp.get_imag() - 2776374339.750000;
+  re_diff = achsDtemp.real() - -2776374339.750000;
+  im_diff = achsDtemp.imag() - 2776374339.750000;
 
   if (re_diff < 0.00001 && im_diff < 0.00001)
     printf("\n!!!! achsDtemp : SUCCESS - !!!! Correctness test passed :-D "
@@ -80,8 +79,8 @@ inline void correctness(CustomComplex<double> &achsDtemp,
     printf("\n!!!! achsDtemp : FAILURE - Correctness test failed :-( :-(  \n");
 
   // asxDtemp correctness
-  re_diff = asxDtemp.get_real() - 738493767.000000;
-  im_diff = asxDtemp.get_imag() - -730362204.000000;
+  re_diff = asxDtemp.real() - 738493767.000000;
+  im_diff = asxDtemp.imag() - -730362204.000000;
 
   if (re_diff < 0.00001 && im_diff < 0.00001)
     printf(
@@ -90,8 +89,8 @@ inline void correctness(CustomComplex<double> &achsDtemp,
     printf("\n!!!! axsDtemp : FAILURE - Correctness test failed :-( :-(  \n");
 
   // achDtemp_cor correctness
-  re_diff = achDtemp_cor.get_real() - 0.00;
-  im_diff = achDtemp_cor.get_imag() - -734427985.500000;
+  re_diff = achDtemp_cor.real() - 0.00;
+  im_diff = achDtemp_cor.imag() - -734427985.500000;
 
   if (re_diff < 0.00001 && im_diff < 0.00001)
     printf("\n!!!! achDtemp_cor : SUCCESS - !!!! Correctness test passed :-D "
@@ -155,16 +154,16 @@ inline void compute_fact(double wx, int nFreq, ARRAY1D_DataType &dFreqGrid,
 inline void ssxDittt_kernel(ARRAY1D_int &inv_igp_index, ARRAY1D_int &indinv,
                             ARRAY2D &aqsmtemp, ARRAY2D &aqsntemp,
                             ARRAY1D_DataType &vcoul, ARRAY3D &I_eps_array,
-                            CustomComplex<double> &ssxDittt, int ngpown,
-                            int ncouls, int n1, int ifreq, double fact1,
-                            double fact2, int igp, int my_igp) {
-  CustomComplex<double> ssxDitt(0.00, 0.00);
+                            ComplexType &ssxDittt, int ngpown, int ncouls,
+                            int n1, int ifreq, double fact1, double fact2,
+                            int igp, int my_igp) {
+  ComplexType ssxDitt(0.00, 0.00);
   for (int ig = 0; ig < ncouls; ++ig) {
-    CustomComplex<double> ssxDit = I_eps_array(ifreq, my_igp, ig) * fact1 +
-                                   I_eps_array((ifreq + 1), my_igp, ig) * fact2;
+    ComplexType ssxDit = I_eps_array(ifreq, my_igp, ig) * fact1 +
+                         I_eps_array((ifreq + 1), my_igp, ig) * fact2;
 
-    ssxDitt += aqsntemp(n1, ig) * CustomComplex_conj(aqsmtemp(n1, igp)) *
-               ssxDit * vcoul(igp);
+    ssxDitt += aqsntemp(n1, ig) * ComplexType_conj(aqsmtemp(n1, igp)) * ssxDit *
+               vcoul(igp);
   }
   ssxDittt = ssxDitt;
 }
@@ -173,7 +172,7 @@ void achsDtemp_Kernel(int number_bands, int ngpown, int ncouls,
                       ARRAY1D_int &inv_igp_index, ARRAY1D_int &indinv,
                       ARRAY2D &aqsntemp, ARRAY2D &aqsmtemp,
                       ARRAY3D &I_epsR_array, ARRAY1D_DataType &vcoul,
-                      CustomComplex<double> &achsDtemp) {
+                      ComplexType &achsDtemp) {
   double achsDtemp_re = 0.00, achsDtemp_im = 0.00;
 #if defined(OPENMP_TARGET)
 #pragma omp target teams distribute parallel for collapse(2) \
@@ -193,20 +192,20 @@ void achsDtemp_Kernel(int number_bands, int ngpown, int ncouls,
     for (int my_igp = 0; my_igp < ngpown; ++my_igp) {
       int indigp = inv_igp_index(my_igp);
       int igp = indinv(indigp);
-      CustomComplex<double> schsDtemp(0.00, 0.00);
+      ComplexType schsDtemp(0.00, 0.00);
 
       for (int ig = 0; ig < ncouls; ++ig) {
-        CustomComplex<double> almost_schsDtemp =
-            aqsntemp(n1, ig) * CustomComplex_conj(aqsmtemp(n1, igp)) *
-            I_epsR_array(1, my_igp, ig);
+        ComplexType almost_schsDtemp = aqsntemp(n1, ig) *
+                                       ComplexType_conj(aqsmtemp(n1, igp)) *
+                                       I_epsR_array(1, my_igp, ig);
         schsDtemp = schsDtemp - almost_schsDtemp;
       }
 
-      achsDtemp_re += CustomComplex_real(schsDtemp * vcoul(igp) * 0.5);
-      achsDtemp_im += CustomComplex_imag(schsDtemp * vcoul(igp) * 0.5);
+      achsDtemp_re += (schsDtemp).real() * vcoul(igp) * 0.5;
+      achsDtemp_im += (schsDtemp).imag() * vcoul(igp) * 0.5;
     } // my_igp
   }   // n1
-  achsDtemp = CustomComplex<double>(achsDtemp_re, achsDtemp_im);
+  achsDtemp = ComplexType(achsDtemp_re, achsDtemp_im);
 }
 
 void asxDtemp_Kernel(int nvband, int nfreqeval, int ncouls, int ngpown,
@@ -215,8 +214,7 @@ void asxDtemp_Kernel(int nvband, int nfreqeval, int ncouls, int ngpown,
                      ARRAY1D_DataType &dFreqGrid, ARRAY1D_int &inv_igp_index,
                      ARRAY1D_int &indinv, ARRAY2D &aqsmtemp, ARRAY2D &aqsntemp,
                      ARRAY1D_DataType &vcoul, ARRAY3D &I_epsR_array,
-                     ARRAY3D &I_epsA_array,
-                     Array1D<CustomComplex<double>> &asxDtemp) {
+                     ARRAY3D &I_epsA_array, ARRAY1D &asxDtemp) {
   double *asxDtemp_re = new double[nfreqeval];
   double *asxDtemp_im = new double[nfreqeval];
   for (int iw = 0; iw < nfreqeval; ++iw) {
@@ -249,7 +247,7 @@ void asxDtemp_Kernel(int nvband, int nfreqeval, int ncouls, int ngpown,
         int igp = indinv(indigp);
         double fact1 = 0.00, fact2 = 0.00;
         int ifreq = 0;
-        CustomComplex<double> ssxDittt(0.00, 0.00);
+        ComplexType ssxDittt(0.00, 0.00);
 
         compute_fact(wx, nFreq, dFreqGrid, fact1, fact2, ifreq, 1, 0);
 
@@ -263,8 +261,8 @@ void asxDtemp_Kernel(int nvband, int nfreqeval, int ncouls, int ngpown,
                           fact1, fact2, igp, my_igp);
 
         ssxDittt *= occ;
-        double ssxDit_re = CustomComplex_real(ssxDittt);
-        double ssxDit_im = CustomComplex_imag(ssxDittt);
+        double ssxDit_re = (ssxDittt).real();
+        double ssxDit_im = (ssxDittt).imag();
 
 #if defined(_OPENMP)
 #pragma omp atomic
@@ -288,7 +286,7 @@ void asxDtemp_Kernel(int nvband, int nfreqeval, int ncouls, int ngpown,
                                    asxDtemp_im [0:nfreqeval])
 #endif
   for (int iw = 0; iw < nfreqeval; ++iw)
-    asxDtemp(iw) = CustomComplex<double>(asxDtemp_re[iw], asxDtemp_im[iw]);
+    asxDtemp(iw) = ComplexType(asxDtemp_re[iw], asxDtemp_im[iw]);
 
   delete[] asxDtemp_re;
   delete[] asxDtemp_im;
@@ -301,8 +299,7 @@ void achDtemp_cor_Kernel(int number_bands, int nvband, int nfreqeval,
                          ARRAY1D_int &inv_igp_index, ARRAY1D_int &indinv,
                          ARRAY2D &aqsmtemp, ARRAY2D &aqsntemp,
                          ARRAY1D_DataType &vcoul, ARRAY3D &I_epsR_array,
-                         ARRAY3D &I_epsA_array,
-                         Array1D<CustomComplex<double>> &achDtemp_cor) {
+                         ARRAY3D &I_epsA_array, ARRAY1D &achDtemp_cor) {
   double *achDtemp_cor_re = new double[nfreqeval];
   double *achDtemp_cor_im = new double[nfreqeval];
 
@@ -335,8 +332,8 @@ void achDtemp_cor_Kernel(int number_bands, int nvband, int nfreqeval,
   for (int n1 = 0; n1 < number_bands; ++n1) {
     for (int iw = 0; iw < nfreqeval; ++iw) {
       flag_occ = n1 < nvband;
-      CustomComplex<double> sch2Di(0.00, 0.00);
-      CustomComplex<double> schDi_cor(0.00, 0.00);
+      ComplexType sch2Di(0.00, 0.00);
+      ComplexType schDi_cor(0.00, 0.00);
       double wx = freqevalmin - ekq(n1) + freqevalstep;
 
       double fact1 = 0.00, fact2 = 0.00;
@@ -354,8 +351,8 @@ void achDtemp_cor_Kernel(int number_bands, int nvband, int nfreqeval,
                            I_epsA_array, aqsmtemp, aqsntemp, vcoul, ncouls,
                            ifreq, ngpown, n1, fact1, fact2);
 
-      double schDi_re = CustomComplex_real(schDi_cor);
-      double schDi_im = CustomComplex_imag(schDi_cor);
+      double schDi_re = (schDi_cor).real();
+      double schDi_im = (schDi_cor).imag();
 
 // Summing up at the end of iw loop
 #if defined(_OPENMP)
@@ -375,14 +372,13 @@ void achDtemp_cor_Kernel(int number_bands, int nvband, int nfreqeval,
   }   // n1
 
   for (int iw = 0; iw < nfreqeval; ++iw)
-    achDtemp_cor(iw) =
-        CustomComplex<double>(achDtemp_cor_re[iw], achDtemp_cor_im[iw]);
+    achDtemp_cor(iw) = ComplexType(achDtemp_cor_re[iw], achDtemp_cor_im[iw]);
 
   delete[] achDtemp_cor_re;
   delete[] achDtemp_cor_im;
 }
 
-inline void schDttt_corKernel1(CustomComplex<double> &schDttt_cor,
+inline void schDttt_corKernel1(ComplexType &schDttt_cor,
                                ARRAY1D_int &inv_igp_index, ARRAY1D_int &indinv,
                                ARRAY3D &I_epsR_array, ARRAY3D &I_epsA_array,
                                ARRAY2D &aqsmtemp, ARRAY2D &aqsntemp,
@@ -399,27 +395,27 @@ inline void schDttt_corKernel1(CustomComplex<double> &schDttt_cor,
       for (int ig = igbeg; ig < min(ncouls, igbeg + blkSize); ++ig) {
         int indigp = inv_igp_index(my_igp);
         int igp = indinv(indigp);
-        CustomComplex<double> sch2Dt = (I_epsR_array(ifreq, my_igp, ig) -
-                                        I_epsA_array(ifreq, my_igp, ig)) *
-                                           fact1 +
-                                       (I_epsR_array((ifreq + 1), my_igp, ig) -
-                                        I_epsA_array((ifreq + 1), my_igp, ig)) *
-                                           fact2;
-        CustomComplex<double> sch2Dtt = aqsntemp(n1, ig) *
-                                        CustomComplex_conj(aqsmtemp(n1, igp)) *
-                                        sch2Dt * vcoul(igp);
+        ComplexType sch2Dt = (I_epsR_array(ifreq, my_igp, ig) -
+                              I_epsA_array(ifreq, my_igp, ig)) *
+                                 fact1 +
+                             (I_epsR_array((ifreq + 1), my_igp, ig) -
+                              I_epsA_array((ifreq + 1), my_igp, ig)) *
+                                 fact2;
+        ComplexType sch2Dtt = aqsntemp(n1, ig) *
+                              ComplexType_conj(aqsmtemp(n1, igp)) * sch2Dt *
+                              vcoul(igp);
 
-        schDttt_re += CustomComplex_real(sch2Dtt);
-        schDttt_im += CustomComplex_imag(sch2Dtt);
-        schDttt_cor_re += CustomComplex_real(sch2Dtt);
-        schDttt_cor_im += CustomComplex_imag(sch2Dtt);
+        schDttt_re += (sch2Dtt).real();
+        schDttt_im += (sch2Dtt).imag();
+        schDttt_cor_re += (sch2Dtt).real();
+        schDttt_cor_im += (sch2Dtt).imag();
       }
     }
   }
-  schDttt_cor = CustomComplex<double>(schDttt_cor_re, schDttt_cor_im);
+  schDttt_cor = ComplexType(schDttt_cor_re, schDttt_cor_im);
 }
 
-inline void schDttt_corKernel2(CustomComplex<double> &schDttt_cor,
+inline void schDttt_corKernel2(ComplexType &schDttt_cor,
                                ARRAY1D_int &inv_igp_index, ARRAY1D_int &indinv,
                                ARRAY3D &I_epsR_array, ARRAY3D &I_epsA_array,
                                ARRAY2D &aqsmtemp, ARRAY2D &aqsntemp,
@@ -434,26 +430,24 @@ inline void schDttt_corKernel2(CustomComplex<double> &schDttt_cor,
     for (int igbeg = 0; igbeg < ncouls; igbeg += blkSize) {
       int indigp = inv_igp_index(my_igp);
       int igp = indinv(indigp);
-      CustomComplex<double> sch2Dtt_store1 =
-          CustomComplex_conj(aqsmtemp(n1, igp)) * vcoul(igp);
+      ComplexType sch2Dtt_store1 =
+          ComplexType_conj(aqsmtemp(n1, igp)) * vcoul(igp);
 
       for (int ig = igbeg; ig < min(ncouls, igbeg + blkSize); ++ig) {
-        CustomComplex<double> sch2Dt =
-            ((I_epsR_array(ifreq, my_igp, ig) -
-              I_epsA_array(ifreq, my_igp, ig)) *
-                 fact1 +
-             (I_epsR_array((ifreq + 1), my_igp, ig) -
-              I_epsA_array((ifreq + 1), my_igp, ig)) *
-                 fact2) *
-            -0.5;
-        CustomComplex<double> sch2Dtt =
-            aqsntemp(n1, ig) * sch2Dt * sch2Dtt_store1;
-        schDttt_cor_re += CustomComplex_real(sch2Dtt);
-        schDttt_cor_im += CustomComplex_imag(sch2Dtt);
+        ComplexType sch2Dt = ((I_epsR_array(ifreq, my_igp, ig) -
+                               I_epsA_array(ifreq, my_igp, ig)) *
+                                  fact1 +
+                              (I_epsR_array((ifreq + 1), my_igp, ig) -
+                               I_epsA_array((ifreq + 1), my_igp, ig)) *
+                                  fact2) *
+                             -0.5;
+        ComplexType sch2Dtt = aqsntemp(n1, ig) * sch2Dt * sch2Dtt_store1;
+        schDttt_cor_re += (sch2Dtt).real();
+        schDttt_cor_im += (sch2Dtt).imag();
       }
     }
   }
-  schDttt_cor = CustomComplex<double>(schDttt_cor_re, schDttt_cor_im);
+  schDttt_cor = ComplexType(schDttt_cor_re, schDttt_cor_im);
 }
 
 int main(int argc, char **argv) {
@@ -525,8 +519,9 @@ int main(int argc, char **argv) {
 #endif
 
 #if defined(OPENMP_TARGET)
-#pragma omp target teams map(tofrom : numTeams, numThreads) \
-  shared(numTeams) private(tid)
+#pragma omp target teams map(tofrom                                            \
+                             : numTeams, numThreads)                           \
+    shared(numTeams) private(tid)
   {
     tid = omp_get_team_num();
     if (tid == 0) {
@@ -577,14 +572,14 @@ int main(int argc, char **argv) {
   ARRAY3D I_epsA_array(nFreq, ngpown, ncouls);
   mem_alloc += 2 * I_epsR_array.getSize();
 
-  Array1D<CustomComplex<double>> sch2Di(nfreqeval);
-  Array1D<CustomComplex<double>> schDi_cor(nfreqeval);
-  Array1D<CustomComplex<double>> achDtemp_cor(nfreqeval);
-  Array1D<CustomComplex<double>> asxDtemp(nfreqeval);
+  ARRAY1D sch2Di(nfreqeval);
+  ARRAY1D schDi_cor(nfreqeval);
+  ARRAY1D achDtemp_cor(nfreqeval);
+  ARRAY1D asxDtemp(nfreqeval);
   mem_alloc += 4 * sch2Di.getSize();
 
   // Variables used :
-  CustomComplex<double> achsDtemp(0.00, 0.00);
+  ComplexType achsDtemp(0.00, 0.00);
 
   // Initialize the data structures
   for (int ig = 0; ig < ngpown; ++ig)
@@ -598,8 +593,8 @@ int main(int argc, char **argv) {
     dw += 1.00;
 
     for (int j = 0; j < ncouls; ++j) {
-      aqsmtemp(i, j) = CustomComplex<double>(0.5, 0.5);
-      aqsntemp(i, j) = CustomComplex<double>(0.5, 0.5);
+      aqsmtemp(i, j) = ComplexType(0.5, 0.5);
+      aqsntemp(i, j) = ComplexType(0.5, 0.5);
     }
   }
 
@@ -609,8 +604,8 @@ int main(int argc, char **argv) {
   for (int i = 0; i < nFreq; ++i) {
     for (int j = 0; j < ngpown; ++j) {
       for (int k = 0; k < ncouls; ++k) {
-        I_epsR_array(i, j, k) = CustomComplex<double>(0.5, 0.5);
-        I_epsA_array(i, j, k) = CustomComplex<double>(0.5, -0.5);
+        I_epsR_array(i, j, k) = ComplexType(0.5, 0.5);
+        I_epsA_array(i, j, k) = ComplexType(0.5, -0.5);
       }
     }
   }
@@ -631,10 +626,10 @@ int main(int argc, char **argv) {
   pref(nFreq - 1) *= 0.5;
 
   for (int i = 0; i < nfreqeval; ++i) {
-    sch2Di(i) = CustomComplex<double>(0.0, 0.0);
-    schDi_cor(i) = CustomComplex<double>(0.0, 0.0);
-    asxDtemp(i) = CustomComplex<double>(0.0, 0.0);
-    achDtemp_cor(i) = CustomComplex<double>(0.0, 0.0);
+    sch2Di(i) = ComplexType(0.0, 0.0);
+    schDi_cor(i) = ComplexType(0.0, 0.0);
+    asxDtemp(i) = ComplexType(0.0, 0.0);
+    achDtemp_cor(i) = ComplexType(0.0, 0.0);
   }
 
   end_preKernel = system_clock::now();
@@ -755,11 +750,11 @@ int main(int argc, char **argv) {
   correctness(achsDtemp, asxDtemp(0), achDtemp_cor(0));
 
   cout << "achsDtemp = ";
-  achsDtemp.print();
+  ComplexType_print(achsDtemp);
   cout << "asxDtemp = ";
-  asxDtemp(0).print();
+  ComplexType_print(asxDtemp(0));
   cout << "achDtemp_cor = ";
-  achDtemp_cor(0).print();
+  ComplexType_print(achDtemp_cor(0));
 
   cout
       << "********** Kernel  Time Taken (Includes data allocation) **********= "

@@ -67,7 +67,7 @@ inline void init_structs(size_t number_bands, size_t ngpown, size_t ncouls,
   const DataType to1 = 1e-6;
   const DataType limittwo = pow(0.5, 2);
   const DataType e_n1kq = 6.0;
-  CustomComplex<DataType> expr(0.5, 0.5);
+  ComplexType expr(0.5, 0.5);
 
 #pragma acc enter data copyin(aqsmtemp, aqsntemp, vcoul, inv_igp_index,        \
                               indinv, I_eps_array, wtilde_array, wx_array)
@@ -81,8 +81,8 @@ inline void init_structs(size_t number_bands, size_t ngpown, size_t ncouls,
 #pragma acc parallel loop present(aqsmtemp, aqsntemp)
   for (int i = 0; i < number_bands; i++)
     for (int j = 0; j < ncouls; j++) {
-      aqsmtemp(i, j) = CustomComplex<DataType>(0.5, 0.5);
-      aqsntemp(i, j) = CustomComplex<DataType>(0.5, 0.5);
+      aqsmtemp(i, j) = ComplexType(0.5, 0.5);
+      aqsntemp(i, j) = ComplexType(0.5, 0.5);
     }
 
 #pragma acc parallel loop copyin(expr) present(I_eps_array, wtilde_array)
@@ -114,14 +114,14 @@ inline void init_structs(size_t number_bands, size_t ngpown, size_t ncouls,
 }
 #endif
 
-inline void correntess(CustomComplex<DataType> result) {
+inline void correntess(ComplexType result) {
   double re_diff, im_diff;
 #if defined(_OPENMP) || defined(_OPENACC)
-  re_diff = result.get_real() - -264241149.849658;
-  im_diff = result.get_imag() - 1321205773.349384;
+  re_diff = result.real() - -264241149.849658;
+  im_diff = result.imag() - 1321205773.349384;
 #else
-  re_diff = result.get_real() - -264241220.914570;
-  im_diff = result.get_imag() - 1321205332.084101;
+  re_diff = result.real() - -264241220.914570;
+  im_diff = result.imag() - 1321205332.084101;
 #endif
 
   if (re_diff < 0.001 && im_diff < 0.001)
@@ -206,8 +206,8 @@ int main(int argc, char **argv) {
 
 
   // Printing out the params passed.
-  std::cout << "Sizeof(CustomComplex<DataType> = "
-            << sizeof(CustomComplex<DataType>) << " bytes" << std::endl;
+  std::cout << "Sizeof(ComplexType = "
+            << sizeof(ComplexType) << " bytes" << std::endl;
   std::cout << "number_bands = " << number_bands << "\t nvband = " << nvband
             << "\t ncouls = " << ncouls
             << "\t nodes_per_group  = " << nodes_per_group
@@ -218,15 +218,15 @@ int main(int argc, char **argv) {
 
   // ALLOCATE statements from fortran gppkernel.
   ARRAY1D achtemp(nend - nstart);
-  memFootPrint += (nend - nstart) * sizeof(CustomComplex<DataType>);
+  memFootPrint += (nend - nstart) * sizeof(ComplexType);
 
   ARRAY2D aqsmtemp(number_bands, ncouls);
   ARRAY2D aqsntemp(number_bands, ncouls);
-  memFootPrint += 2 * (number_bands * ncouls) * sizeof(CustomComplex<DataType>);
+  memFootPrint += 2 * (number_bands * ncouls) * sizeof(ComplexType);
 
   ARRAY2D I_eps_array(ngpown, ncouls);
   ARRAY2D wtilde_array(ngpown, ncouls);
-  memFootPrint += 2 * (ngpown * ncouls) * sizeof(CustomComplex<DataType>);
+  memFootPrint += 2 * (ngpown * ncouls) * sizeof(ComplexType);
 
   ARRAY1D_DataType vcoul(ncouls);
   memFootPrint += ncouls * sizeof(DataType);
@@ -244,7 +244,7 @@ int main(int argc, char **argv) {
        << endl;
 
 #if !defined(_OPENACC)
-  CustomComplex<DataType> expr(.5, .5);
+  ComplexType expr(.5, .5);
   for (int i = 0; i < number_bands; i++)
     for (int j = 0; j < ncouls; j++) {
       aqsmtemp(i, j) = expr;
@@ -291,7 +291,7 @@ int main(int argc, char **argv) {
   // Check for correctness
   correntess(achtemp(0));
   printf("\n Final achtemp\n");
-  achtemp(0).print();
+  ComplexType_print(achtemp(0));
 
   end = system_clock::now();
   elapsed = end - start;
@@ -366,21 +366,21 @@ void noflagOCC_solver(size_t number_bands, size_t ngpown, size_t ncouls,
           achtemp_re_loc[iw] = 0.00;
           achtemp_im_loc[iw] = 0.00;
         }
-        CustomComplex<DataType> sch_store1 =
-            CustomComplex_conj(aqsmtemp(n1, igp)) * aqsntemp(n1, igp) * 0.5 *
+        ComplexType sch_store1 =
+            ComplexType_conj(aqsmtemp(n1, igp)) * aqsntemp(n1, igp) * 0.5 *
             vcoul(igp) * wtilde_array(my_igp, igp);
 
         for (int iw = nstart; iw < nend; ++iw) {
-          CustomComplex<DataType> wdiff =
+          ComplexType wdiff =
               wx_array(iw) - wtilde_array(my_igp, ig);
-          CustomComplex<DataType> delw =
-              CustomComplex_conj(wdiff) *
-              (1 / CustomComplex_real((wdiff * CustomComplex_conj(wdiff))));
-          CustomComplex<DataType> sch_array =
+          ComplexType delw =
+              ComplexType_conj(wdiff) *
+              (1 / (wdiff * ComplexType_conj(wdiff)).real());
+          ComplexType sch_array =
               delw * I_eps_array(my_igp, ig) * sch_store1;
 
-          achtemp_re_loc[iw] += CustomComplex_real(sch_array);
-          achtemp_im_loc[iw] += CustomComplex_imag(sch_array);
+          achtemp_re_loc[iw] += (sch_array).real();
+          achtemp_im_loc[iw] += (sch_array).imag();
         }
         ach_re0 += achtemp_re_loc[0];
         ach_re1 += achtemp_re_loc[1];
@@ -396,7 +396,7 @@ void noflagOCC_solver(size_t number_bands, size_t ngpown, size_t ncouls,
   duration<double> elapsed = end - start;
   double elapsedKernelTimer = elapsed.count();
 
-  achtemp(0) = CustomComplex<DataType>(ach_re0, ach_im0);
-  achtemp(1) = CustomComplex<DataType>(ach_re1, ach_im1);
-  achtemp(2) = CustomComplex<DataType>(ach_re2, ach_im2);
+  achtemp(0) = ComplexType(ach_re0, ach_im0);
+  achtemp(1) = ComplexType(ach_re1, ach_im1);
+  achtemp(2) = ComplexType(ach_re2, ach_im2);
 }

@@ -45,348 +45,155 @@ C++ class for complex number arithemetic.
 #ifndef __CustomComplex
 #define __CustomComplex
 
-#include <iostream>
-#include <cstdlib>
-#include <memory>
-#include <iomanip>
+#include <chrono>
 #include <cmath>
-#include <ctime>
-#include <stdio.h>
-#include <sys/time.h>
+#include <iostream>
 using namespace std;
+using namespace chrono;
 
-template<class type>
+template <class type>
 
 class CustomComplex {
-    public:
-    type x;
-    type y;
+public:
+  type re;
+  type im;
 
+  explicit CustomComplex() {
+    re = 0.00;
+    im = 0.00;
+  }
 
-    explicit CustomComplex () {
-        x = 0.00;
-        y = 0.00;
-    }
+  explicit CustomComplex(const double &a, const double &b) {
+    re = a;
+    im = b;
+  }
 
+  CustomComplex(const CustomComplex &src) {
+    re = src.re;
+    im = src.im;
+  }
 
-     explicit CustomComplex(const double& a, const double& b) {
-        x = a;
-        y = b;
-    }
+  CustomComplex &operator=(const CustomComplex &src) {
+    re = src.re;
+    im = src.im;
 
-     CustomComplex(const CustomComplex& src) {
-        x = src.x;
-        y = src.y;
-    }
+    return *this;
+  }
 
-     CustomComplex& operator =(const CustomComplex& src) {
-        x = src.x;
-        y = src.y;
+  CustomComplex &operator+=(const CustomComplex &src) {
+    re = src.re + this->re;
+    im = src.im + this->im;
 
-        return *this;
-    }
+    return *this;
+  }
 
-     CustomComplex& operator +=(const CustomComplex& src) {
-        x = src.x + this->x;
-        y = src.y + this->y;
+  CustomComplex &operator*=(const CustomComplex &src) {
+    re = src.re * this->re;
+    im = src.im * this->im;
 
-        return *this;
-    }
+    return *this;
+  }
 
-     CustomComplex& operator *=(const CustomComplex& src) {
-        x = src.x * this->x;
-        y = src.y * this->y;
+  CustomComplex &operator*=(const double src) {
+    re = src * this->re;
+    im = src * this->im;
 
-        return *this;
-    }
+    return *this;
+  }
 
-     CustomComplex& operator *=(const double src) {
-        x = src * this->x;
-        y = src * this->y;
+  CustomComplex &operator-=(const CustomComplex &src) {
+    re = src.re - this->re;
+    im = src.im - this->im;
 
-        return *this;
-    }
+    return *this;
+  }
 
-     CustomComplex& operator -=(const CustomComplex& src) {
-        x = src.x - this->x;
-        y = src.y - this->y;
+  CustomComplex &operator-() {
+    re = -this->re;
+    im = -this->im;
 
-        return *this;
-    }
+    return *this;
+  }
 
-     CustomComplex& operator -() {
-        x = -this->x;
-        y = -this->y;
+  CustomComplex &operator~() { return *this; }
 
-        return *this;
-    }
+  void print() const {
+    printf("( %f, %f) ", this->re, this->im);
+    printf("\n");
+  }
 
-    CustomComplex& operator ~() {
-        return *this;
-    }
+  double real() const { return this->re; }
 
-    void print() const {
-        printf("( %f, %f) ", this->x, this->y);
-        printf("\n");
-    }
+  double imag() const { return this->im; }
 
-    double get_real() const
-    {
-        return this->x;
-    }
+  void set_real(double val) { this->re = val; }
 
-    double get_imag() const
-    {
-        return this->y;
-    }
+  void set_imag(double val) { this->im = val; }
 
-    void set_real(double val)
-    {
-        this->x = val;
-    }
+  template <class T>
+  friend inline CustomComplex<T> operator*(const CustomComplex<T> a,
+                                           const CustomComplex<T> b) {
+    return (
+        CustomComplex<T>(a.re * b.re - a.im * b.im, a.re * b.im + a.im * b.re));
+  }
 
-    void set_imag(double val)
-    {
-        this->y = val;
-    }
+  template <class T>
+  friend inline CustomComplex<T> operator*(const CustomComplex<T> &a,
+                                           const double &b) {
+    return (CustomComplex<T>(a.re * b, a.im * b));
+  }
 
-    template<class T>
-     friend inline CustomComplex<T> operator *(const CustomComplex<T> a, const CustomComplex<T> b) {
-        T x_this = a.x * b.x - a.y*b.y ;
-        T y_this = a.x * b.y + a.y*b.x ;
-        CustomComplex<T> result(x_this, y_this);
-        return (result);
-    }
+  template <class T>
+  friend inline CustomComplex<T> operator*(const CustomComplex<T> &a,
+                                           const int &b) {
+    return (CustomComplex<T>(a.re * b, a.im * b));
+  }
 
-    template<class T>
-     friend inline CustomComplex<T> operator *(const CustomComplex<T>& a, const double &b) {
-       CustomComplex<T> result(a.x*b, a.y*b);
-       return result;
-    }
+  template <class T>
+  friend inline CustomComplex<T> operator-(CustomComplex<T> &a,
+                                           CustomComplex<T> &b) {
+    return (CustomComplex<T>(a.re - b.re, a.im - b.im));
+  }
 
-    template<class T>
-     friend inline CustomComplex<T> operator *(const CustomComplex<T> &a, const int &b) {
-       CustomComplex<T> result(a.x*b, a.y*b);
-       return result;
-    }
+  template <class T>
+  friend inline CustomComplex<T> operator-(T &a, CustomComplex<T> &src) {
+    return (CustomComplex<T>(a - src.re, 0 - src.im));
+  }
 
-    template<class T>
-     friend inline CustomComplex<T> operator -(CustomComplex<T>& a, CustomComplex<T>& b) {
-        CustomComplex<T> result(a.x - b.x, a.y - b.y);
-        return result;
-    }
+  template <class T>
+  friend inline CustomComplex<T> operator+(const double &a,
+                                           CustomComplex<T> &src) {
+    return (CustomComplex<T>(a + src.re, src.im));
+  }
 
-    template<class T>
-     friend inline CustomComplex<T> operator -(T &a, CustomComplex<T>& src) {
-        CustomComplex<T> result(a - src.x, 0 - src.y);
-        return result;
-    }
+  template <class T>
+  friend inline CustomComplex<T> operator+(CustomComplex<T> a,
+                                           CustomComplex<T> b) {
+    return (CustomComplex<T>(a.re + b.re, a.im + b.im));
+  }
 
-    template<class T>
-     friend inline CustomComplex<T> operator +(const double &a, CustomComplex<T>& src) {
-        CustomComplex<T> result(a + src.x, src.y);
-        return result;
-    }
+  template <class T> inline CustomComplex<T> conj(const CustomComplex<T> *src) {
+    return (CustomComplex<T>(src->re, -src->im));
+  }
 
-    template<class T>
-     friend inline CustomComplex<T> operator +(CustomComplex<T> a, CustomComplex<T> b) {
-        CustomComplex<T> result(a.x + b.x, a.y+b.y);
-        return result;
-    }
-
-    template<class T>
-     friend inline CustomComplex<T> operator /(CustomComplex<T> a, CustomComplex<T> b) {
-
-        CustomComplex<T> b_conj = CustomComplex_conj(&b);
-        CustomComplex<T> numerator = a * b_conj;
-        CustomComplex<T> denominator = b * b_conj;
-
-        double re_this = numerator.x / denominator.x;
-        double im_this = numerator.y / denominator.x;
-
-        CustomComplex<T> result(re_this, im_this);
-        return result;
-    }
-
-    template<class T>
-     friend inline CustomComplex<T> operator /(CustomComplex<T> a, T b) {
-       CustomComplex<T> result(a.x/b, a.y/b);
-       return result;
-    }
-
-    template<class T>
-     friend inline void CustomComplex_equals(const CustomComplex<T>* src, CustomComplex<T>* dest) ;
-
-    template<class T>
-     friend inline CustomComplex<T> CustomComplex_conj(const CustomComplex<T>* src) ;
-
-    template<class T>
-     friend inline CustomComplex<T> CustomComplex_conj(const CustomComplex<T>& src) ;
-
-    template<class T>
-     friend inline double CustomComplex_abs(const CustomComplex<T>& src) ;
-
-    template<class T>
-     friend inline double CustomComplex_real( const CustomComplex<T>* src) ;
-
-    template<class T>
-     friend inline double CustomComplex_imag( const CustomComplex<T>* src) ;
-
-    template<class T>
-     friend inline double CustomComplex_real( const CustomComplex<T>& src) ;
-
-    template<class T>
-     friend inline double CustomComplex_imag( const CustomComplex<T>& src) ;
-
-    template<class T>
-     friend inline CustomComplex<T> CustomComplex_product(const CustomComplex<T>* src, T* b) ;
-
-    template<class T>
-     friend inline CustomComplex<T> CustomComplex_product(const CustomComplex<T>* src, T b) ;
-
-    template<class T>
-     friend inline CustomComplex<T> CustomComplex_product(const CustomComplex<T>* a, const CustomComplex<T>* b) ;
-
-    template<class T>
-     friend inline CustomComplex<T> CustomComplex_minus(const T* a, const CustomComplex<T>* src) ;
-
-    template<class T>
-     friend inline CustomComplex<T> CustomComplex_minus(const CustomComplex<T>* a, const CustomComplex<T>* b) ;
-
-    template<class T>
-     friend inline CustomComplex<T> CustomComplex_plus(const CustomComplex<T>* a, const CustomComplex<T>* b) ;
-
-    template<class T>
-     friend inline void CustomComplex_plusEquals(CustomComplex<T>* a, const CustomComplex<T>* b) ;
-
-    template<class T>
-     friend inline void CustomComplex_minusEquals(CustomComplex<T>* a, const CustomComplex<T>* b) ;
-
-    template<class T>
-    friend inline void CustomComplex_print(const CustomComplex<T>& src);
+  template <class T> inline CustomComplex<T> conj(const CustomComplex<T> &src) {
+    return (CustomComplex<T>(src.re, -src.im));
+  }
 };
 
 /*Print the complex number*/
-template<class T>
-inline void CustomComplex_print(const CustomComplex<T>& src)
-{
-    printf("( %f, %f) ", src.x, src.y);
-    printf("\n");
+template <class T>
+inline void CustomComplex_print(const CustomComplex<T> &src) {
+  printf("( %f, %f) ", src.re, src.im);
+  printf("\n");
 }
 
-/* Return the conjugate of a complex number
-flop
-*/
-template<class T>
-inline CustomComplex<T> CustomComplex_conj(const CustomComplex<T>* src) {
-    T re_this = src->x;
-    T im_this = -1 * src->y;
-    CustomComplex<T> result(re_this, im_this);
-    return result;
-}
-
-template<class T>
-inline CustomComplex<T> CustomComplex_conj(const CustomComplex<T>& src) {
-    T re_this = src.x;
-    T im_this = -1 * src.y;
-    CustomComplex<T> result(re_this, im_this);
-    return result;
-}
-
-/*
- * Return the absolute of a complex number
- */
-template<class T>
-inline double CustomComplex_abs(const CustomComplex<T>& src) {
-    T re_this = src.x * src.x;
-    T im_this = src.y * src.y;
-
-    T result = sqrt(re_this+im_this);
-    return result;
-}
-
-/*
- * Return the real part of a complex number
- */
-template<class T>
-inline double CustomComplex_real( const CustomComplex<T>* src) {
-    return src->x;
-}
-
-template<class T>
-inline double CustomComplex_real( const CustomComplex<T>& src) {
-    return src.x;
-}
-
-/*
- * Return the imaginary part of a complex number
- */
-template<class T>
-inline double CustomComplex_imag( const CustomComplex<T>* src) {
-    return src->y;
-}
-
-template<class T>
-inline double CustomComplex_imag( const CustomComplex<T>& src) {
-    return src.y;
-}
-
-template<class T>
-inline CustomComplex<T> CustomComplex_product(const CustomComplex<T>* src, T* b) {
-   T re_this = src->x * (*b);
-   T im_this = src->y * (*b);
-   return (CustomComplex<T>(re_this, im_this));
-}
-
-template<class T>
-inline CustomComplex<T> CustomComplex_product(const CustomComplex<T>* src, T b) {
-   T re_this = src->x * b;
-   T im_this = src->y * b;
-   return (CustomComplex<T>(re_this, im_this));
-}
-
-template<class T>
-inline CustomComplex<T> CustomComplex_product(const CustomComplex<T>* a, const CustomComplex<T>* b){
-    T x_this = a->x * b->x - a->y*b->y ;
-    T y_this = a->x * b->y + a->y*b->x ;
-    CustomComplex<T> result(x_this, y_this);
-    return (result);
-}
-
-template<class T>
-inline CustomComplex<T> CustomComplex_minus(const CustomComplex<T>* a, const CustomComplex<T>* b){
-        CustomComplex<T> result(a->x - b->x, a->y - b->y);
-        return result;
-}
-
-template<class T>
-inline CustomComplex<T> CustomComplex_minus(const T* a, const CustomComplex<T>* src) {
-        CustomComplex<T> result(*a - src->x, 0 - src->y);
-        return result;
-}
-
-template<class T>
-inline CustomComplex<T> CustomComplex_plus(const CustomComplex<T>* a, const CustomComplex<T>* b){
-        CustomComplex<T> result(a->x + b->x, a->y + b->y);
-        return result;
-}
-
-template<class T>
-inline void CustomComplex_equals(const CustomComplex<T>* src, CustomComplex<T>* dest) {
-    *dest = CustomComplex<T>(src->x, src->y);
-}
-
-template<class T>
-inline void CustomComplex_plusEquals(CustomComplex<T>* a, const CustomComplex<T>* b){
-        a->x += b->x ;
-        a->y += b->y ;
-}
-
-template<class T>
-inline void CustomComplex_minusEquals(CustomComplex<T>* a, const CustomComplex<T>* b){
-        a->x -= b->x ;
-        a->y -= b->y ;
+template <class T>
+inline CustomComplex<T> CustomComplex_conj(const CustomComplex<T> &src) {
+  T re_this = src.re;
+  T im_this = -1 * src.im;
+  CustomComplex<T> result(re_this, im_this);
+  return result;
 }
 
 #endif
-

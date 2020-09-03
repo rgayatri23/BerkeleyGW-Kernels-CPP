@@ -11,6 +11,8 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
   message(ERROR "In-source build")
 endif()
 
+SET(std_complex ON CACHE BOOL "std::complex")
+
 SET(GPPTarget gpp)
 FILE(GLOB gpp-sources
     ${CMAKE_SOURCE_DIR}/GPP/gpp.cpp
@@ -28,6 +30,10 @@ ADD_EXECUTABLE(
     ${GPPTarget}
     ${gpp-sources}
   )
+
+if(${std_complex})
+  target_compile_definitions(${GPPTarget} PRIVATE std_complex)
+endif()
 
 if(${OPENMP})
   find_package(OpenMP REQUIRED)
@@ -66,6 +72,10 @@ if(${BUILD_FF})
       ${FFTarget}
       ${ff-sources}
     )
+
+if(${std_complex})
+  target_compile_definitions(${FFTarget} PRIVATE std_complex)
+endif()
 
 if(${OPENMP})
   target_link_libraries(${FFTarget} PUBLIC OpenMP::OpenMP_CXX)
