@@ -9,8 +9,8 @@ all: gpp
 EXEC=gpp
 
 std_complex=y
-ifeq (std_complex,y)
-	CXXFLAGS += -Dstd_complex
+ifeq ($(std_complex),y)
+CXXFLAGS += -Dstd_complex
 endif
 
 #LDFLAGS += -L/opt/cray/pe/papi/5.6.0.6/lib -lpapi

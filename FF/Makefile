@@ -6,7 +6,7 @@ ff_obj = ff.o
 CXXFLAGS += -I$(CUDA_ROOT)/include
 
 std_complex=y
-ifeq (std_complex,y)
+ifeq ($(std_complex),y)
 	CXXFLAGS += -Dstd_complex
 endif
 
