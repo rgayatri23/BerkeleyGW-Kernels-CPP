@@ -1,9 +1,5 @@
 cmake_minimum_required (VERSION 3.12)
-project(BerkeleyGW-kernels
-  LANGUAGES C CXX
-  )
 
-SET(CMAKE_CXX_STANDARD 11)
 # don't allow in-source builds
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
   message(STATUS "Warning! Building from the source directory is not allow")
@@ -11,91 +7,67 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
   message(ERROR "In-source build")
 endif()
 
-SET(std_complex ON CACHE BOOL "std::complex")
+project(
+    BerkeleyGW-kernels
+    LANGUAGES C CXX)
 
-SET(GPPTarget gpp)
-FILE(GLOB gpp-sources
-    ${CMAKE_SOURCE_DIR}/GPP/gpp.cpp
-    ${CMAKE_SOURCE_DIR}/ComplexClass/CustomComplex.h
-    ${CMAKE_SOURCE_DIR}/arrayMD/arrayMD.h
-    ${CMAKE_SOURCE_DIR}/common/Defines.h
-  )
+SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules ${CMAKE_MODULE_PATH})
 
-MESSAGE(STATUS "CMAKE_SOURCE_DIR = " ${CMAKE_SOURCE_DIR})
+SET(CMAKE_CXX_STANDARD 14)
+SET(CMAKE_CXX_STANDARD_REQUIRED ON)
+SET(CMAKE_CXX_EXTENSIONS ON)
 
-SET(BUILD_FF OFF CACHE BOOL "BUILD_FF Option")
-MESSAGE(STATUS "BUILDING FF " ${BUILD_FF})
+# creates an option and save the variable name
+MACRO(GPP_ADD_OPTION _VAR _MSG _DEF)
+    LIST(APPEND GPP_OPTIONS ${_VAR})
+    OPTION(${_VAR} "${_MSG}" ${_DEF})
+ENDMACRO()
 
-ADD_EXECUTABLE(
-    ${GPPTarget}
-    ${gpp-sources}
-  )
+GPP_ADD_OPTION(GPP_BUILD_FF "Build FF" OFF)
+GPP_ADD_OPTION(GPP_BUILD_TESTING "Enable testing" OFF)
+GPP_ADD_OPTION(GPP_USE_OPENMP "Enable OpenMP support" ON)
+GPP_ADD_OPTION(GPP_USE_OPENMP_TARGET "Enable OpenMP target support" OFF)
+GPP_ADD_OPTION(GPP_USE_TIMEMORY "Enable timemory support" OFF)
+GPP_ADD_OPTION(GPP_USE_STD_COMPLEX "Enable std::complex" ON)
 
-if(${std_complex})
-  target_compile_definitions(${GPPTarget} PRIVATE std_complex)
-endif()
+INCLUDE(GPP_Utilities)  # some macros
+INCLUDE(GPP_Packages)   # creates interface libs and finds packages
+                        # based on options
 
-if(${OPENMP})
-  find_package(OpenMP REQUIRED)
-  target_link_libraries(${GPPTarget} PUBLIC OpenMP::OpenMP_CXX)
-endif()
+MESSAGE(STATUS "")
+MESSAGE(STATUS "Configuration options:")
+FOREACH(_OPT ${GPP_OPTIONS})
+    # print ON/OFF
+    MESSAGE(STATUS "    ${_OPT} = ${${_OPT}}")
+    # set to zero or one for generator expressions
+    IF(${_OPT})
+        SET(${_OPT} 1)
+    ELSE()
+        SET(${_OPT} 0)
+    ENDIF()
+ENDFOREACH()
+MESSAGE(STATUS "")
 
-if(${OPENMP_TARGET})
-  find_package(CUDA REQUIRED)
-  find_package(OpenMP REQUIRED)
-  target_compile_definitions(${GPPTarget} PRIVATE OPENMP_TARGET)
-  target_link_libraries(${GPPTarget} PUBLIC OpenMP::OpenMP_CXX)
+ADD_EXECUTABLE(gpp ${PROJECT_SOURCE_DIR}/GPP/gpp.cpp)
 
-  if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
-  target_compile_options(${GPPTarget} PRIVATE -fopenmp-targets=nvptx64-nvidia-cuda --cuda-path=${CUDA_TOOLKIT_ROOT_DIR} -I${CUDA_TOOLKIT_ROOT_DIR}/include -ffp-contract=fast)
-  target_compile_options(${GPPTarget} PRIVATE -fopenmp-cuda-mode)
-  target_compile_options(${GPPTarget} PRIVATE -ffast-math -fstrict-aliasing -Wall -Wno-unused-variable -Wall)
-  target_link_options(${GPPTarget} PRIVATE -fopenmp-targets=nvptx64-nvidia-cuda -fopenmp=libiomp5)
-  endif()
+TARGET_LINK_LIBRARIES(gpp PRIVATE
+    gpp-source
+    gpp-compile-options
+    gpp-std-complex
+    $<IF:${GPP_USE_OPENMP},gpp-openmp,>
+    $<IF:${GPP_USE_OPENMP_TARGET},gpp-openmp-target,>)
 
-  if(${CMAKE_CXX_COMPILER_ID} STREQUAL "XL")
-  target_compile_options(${GPPTarget} PRIVATE -qsmp=omp:noauto -qoffload)
-  target_link_options(${GPPTarget} PRIVATE -qsmp=omp:noauto -qoffload)
-  endif()
-  target_link_libraries(${GPPTarget} PUBLIC OpenMP::OpenMP_CXX)
-endif()
+IF(GPP_BUILD_FF)
+    ADD_EXECUTABLE(ff ${PROJECT_SOURCE_DIR}/FF/ff.cpp)
 
-if(${BUILD_FF})
-  SET(FFTarget ff)
-  FILE(GLOB ff-sources
-      ${CMAKE_SOURCE_DIR}/FF/ff.cpp
-      ${CMAKE_SOURCE_DIR}/ComplexClass/CustomComplex.h
-      ${CMAKE_SOURCE_DIR}/arrayMD/*.h
-    )
+    TARGET_LINK_LIBRARIES(ff PRIVATE
+        gpp-source
+        gpp-compile-options
+        gpp-std-complex
+        $<IF:${GPP_USE_OPENMP},gpp-openmp,>
+        $<IF:${GPP_USE_OPENMP_TARGET},gpp-openmp-target,>)
+ENDIF()
 
-  ADD_EXECUTABLE(
-      ${FFTarget}
-      ${ff-sources}
-    )
-
-if(${std_complex})
-  target_compile_definitions(${FFTarget} PRIVATE std_complex)
-endif()
-
-if(${OPENMP})
-  target_link_libraries(${FFTarget} PUBLIC OpenMP::OpenMP_CXX)
-endif()
-
-if(${OPENMP_TARGET})
-  target_compile_definitions(${FFTarget} PRIVATE OPENMP_TARGET)
-
-  if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
-    target_compile_options(${FFTarget} PRIVATE -fopenmp-targets=nvptx64-nvidia-cuda --cuda-path=${CUDA_TOOLKIT_ROOT_DIR} -I${CUDA_TOOLKIT_ROOT_DIR}/include -ffp-contract=fast)
-    target_compile_options(${FFTarget} PRIVATE -fopenmp-cuda-mode)
-    target_compile_options(${FFTarget} PRIVATE -ffast-math -fstrict-aliasing -Wall -Wno-unused-variable -Wall)
-    target_link_options(${FFTarget} PRIVATE -fopenmp-targets=nvptx64-nvidia-cuda -fopenmp=libiomp5)
-  endif()
-
-  if(${CMAKE_CXX_COMPILER_ID} STREQUAL "XL")
-    target_compile_options(${FFTarget} PRIVATE -qsmp=omp:noauto -qoffload)
-    target_link_options(${FFTarget} PRIVATE -qsmp=omp:noauto -qoffload)
-  endif()
-  target_link_libraries(${FFTarget} PUBLIC OpenMP::OpenMP_CXX)
-endif()
-
-endif()
+IF(GPP_BUILD_TESTING)
+    ADD_SUBDIRECTORY(test)
+ENDIF()

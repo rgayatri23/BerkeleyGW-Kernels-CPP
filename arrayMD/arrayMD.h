@@ -20,8 +20,10 @@
 #include <helper_functions.h>
 #endif
 
+#    if __cplusplus < 201402L  // C++11
 template<bool B, typename T>
 using enable_if_t = typename std::enable_if<B, T>::type;
+#endif
 
 #if __NVCC__
 #define CUDA_HOSTDEV __host__ __device__
