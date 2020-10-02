@@ -63,9 +63,19 @@ protected:
 
 //--------------------------------------------------------------------------------------//
 
+#if defined(GPP_USE_OPENMP_TARGET)
+static constexpr auto BACKEND_TYPE = OPENMP_TARGET_BACKEND;
+#elif defined(GPP_USE_OPENMP)
+static constexpr auto BACKEND_TYPE = OPENMP_BACKEND;
+#else
+static constexpr auto BACKEND_TYPE = OPENACC_BACKEND;
+#endif
+
+//--------------------------------------------------------------------------------------//
+
 TEST_F(GPP_FIXTURE_NAME, standard)
 {
-    auto result = run<OPENMP_BACKEND>();
+    auto result = run<BACKEND_TYPE>();
 
     printf("\n %s :: Final achtemp\n", details::get_test_name().c_str());
     ComplexType_print(result);

@@ -12,6 +12,7 @@ if(GPP_USE_OPENMP)
             gpp-source
             gpp-std-complex
             gpp-compile-options
+        ENVIRONMENT "OMP_NUM_THREADS=8;"
         )
 endif()
 

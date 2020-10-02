@@ -118,7 +118,7 @@ endif()
 
 if(GPP_USE_OPENMP_TARGET)
     target_compile_definitions(gpp-openmp INTERFACE
-        GPP_OPENMP_TARGET
+        GPP_USE_OPENMP_TARGET
         OPENMP_TARGET)
     target_link_libraries(gpp-openmp-target INTERFACE OpenMP::OpenMP_CXX)
 
